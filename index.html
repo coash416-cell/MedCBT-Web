@@ -824,7 +824,7 @@ body #mbFab:hover{transform:scale(1.07)}#mbFab:active{transform:scale(.95)}
       <section id="v-bank" class="view">
         <div class="page-header">
           <div><h2 class="page-title">Smart Question Bank Manager</h2><p class="page-sub">Organise, inspect, edit and protect your medical question collection</p></div>
-          <div class="flex-row"><button class="btn btn-sm" onclick="openNewBankModal()">+ New Bank</button><button class="btn btn-sm btn-primary" onclick="openEditQModal(null)">+ Add MCQ</button><button class="btn btn-sm" onclick="openWrittenModal(null)">+ Add SAQ / Essay</button></div>
+          <div class="flex-row"><button class="btn btn-sm" onclick="openNewBankModal()">+ New Bank</button><button class="btn btn-sm btn-primary" onclick="openEditQModal(null)">+ Add MCQ</button><button class="btn btn-sm" onclick="openWrittenModal(null)">+ Add SAQ / Essay</button><button class="btn btn-sm" onclick="openWrittenPaste()">Paste written Qs</button></div>
         </div>
         <div class="qbm-stats" id="qbmStats"></div>
         <div class="qbm-tabs" role="tablist">
@@ -1862,7 +1862,7 @@ function startExam() {
     updateTimerDisplay();
     AppState.exam.timerId = setInterval(() => {
       if (!AppState.exam || AppState.exam.finished) return;
-      AppState.exam.secondsLeft--;
+      AppState.exam.secondsLeft = AppState.exam.deadline ? Math.max(0, Math.ceil((AppState.exam.deadline - Date.now()) / 1000)) : AppState.exam.secondsLeft - 1;
       updateTimerDisplay();
       if (AppState.exam.secondsLeft <= 0) {
         toast('Time expired! Submitting exam automatically.');
@@ -4381,11 +4381,11 @@ this.workerSrc)).WorkerMessageHandler})())}}class WorkerTransport{downloadInfoCa
       '<b>From a file:</b> Import &amp; OCR Parser. Pick the bank, subject and topic, then drop in a PDF, Word, PowerPoint, text file, MedCBT JSON backup or a photo of a printed paper. You can also paste raw question text.',
       '<b>Reading engine:</b> <i>Smart text reading</i> is the normal choice. <i>Fast text parsing</i> skips photo-scanning. <i>Gemini AI</i> reads messy scans and needs a key and internet.',
       'Always check imported questions in Question Banks. Use <b>Missing Correct Answer</b> in the status filter to find ones with no answer set. <b>AI Solve Unanswered</b> (next to Split by Course) asks Gemini to suggest answers for up to 10 unanswered multiple-choice questions in the current view at a time; check them yourself.',
-      '<b>Split by Course</b> sorts a mixed bank into your courses. <b>Deduplicate</b> deletes repeated questions (same wording) from the selected bank, so back up first. <b>Export filtered</b> downloads the questions you are viewing as JSON. There is no print option.'
+      '<b>Split by Course</b> sorts a mixed bank into courses. <b>Merge ticked</b> (Overview tab) joins banks you tick. Each bank has an <b>Export</b> button, and <b>Export filtered</b> saves what you are viewing. <b>Deduplicate</b> deletes repeated questions (same wording) from the selected bank, so back up first; Quality Control also lists possible duplicates for you to review.'
     ]) + '<p class="text-sm text-muted">Works without internet: PDF, PowerPoint, text and JSON files. Needs internet: Word (.docx) files, photo scanning (OCR) and Gemini.</p>')}
     ${sec('5 · Written questions (short answer and essay)', li([
       'Question Banks → <b>+ Add SAQ / Essay</b> to add one. Write the question, a <b>model answer</b> and <b>marking points</b> (one per line, one mark each).',
-      '<b>Paste written questions</b> adds many at once. Format: <b>Q:</b> the question, <b>A:</b> the model answer, and optional <b>M:</b> lines for marking points. Without M: lines, each bulleted or numbered line of your answer becomes a marking point.',
+      '<b>Paste written Qs</b> adds many at once. Format: <b>Q:</b> the question, <b>A:</b> the model answer, and optional <b>M:</b> lines for marking points. Without M: lines, each bulleted or numbered line of your answer becomes a marking point.',
       'To practise: Spaced Review → <b>Add written questions</b>, then <b>Practise written now</b>. Type your answer from memory, tap <b>Show model answer</b>, and tick the marking points you covered. You get a mark and a suggested rating.',
       'Written questions never appear in normal MCQ exams.'
     ]))}
@@ -6123,7 +6123,7 @@ Return ONLY a JSON array, no markdown fences: [{"q":"...","o":["..."],"a":0,"e":
     const d = (id, title, items) => `<details class="gd card" ${id ? `id="${id}"` : ''}><summary>${title}</summary><div class="gdb">${li(items)}</div></details>`;
     g.insertAdjacentHTML('beforeend',
       d('gdP53', '15 · What is new in 5.4', ['The sidebar is now grouped: <b>Dashboard</b> on top, then <b>Practice</b>, <b>Revise</b>, <b>Learn with AI</b>, <b>Library</b>, <b>Insights</b> and <b>Help</b>. On a phone, open <b>More</b> for the same groups.', 'New screens: <b>Smart Revision</b>, <b>AI Question Lab</b> and <b>Performance</b> (sections 16 to 18). The <b>Dashboard</b> now opens with a summary of what needs attention today.', '<b>Courses</b>: the first time you open this version it adds the same starter courses and topics as Pro AI Smart: <b>Gross Anatomy, Histology, Embryology, Physiology</b> and <b>Biochemistry</b>. Anything you already have is kept and nothing is duplicated. If you delete some later, tap <b>Add my 2nd MBBS courses</b> on <b>Courses &amp; Topics</b> to bring back the missing courses and topics. Then tap <b>✦ Smart Arrange</b> on the same screen to sort your existing questions into them (section 19). You can rename, add or delete courses and topics freely.', 'Your Gemini keys are now stored encrypted (section 20). Nothing else about your saved data changed, so you can open 5.4 on the same device and keep everything.']) +
-      d('', '16 · Smart Revision (today\'s session)', ['Open <b>Smart Revision</b> (Dashboard button or the sidebar). Pick <b>10, 20 or 30 min</b>: the app builds that many questions, about one per minute.', 'The mix is, in order: spaced-review cards that are due, questions you got wrong more often than right, questions from your three weakest topics, then new questions. The four boxes show how many came from each.', 'Tap <b>Start</b>. Answers show straight after each question. The session counts as a normal exam, so your scores, spaced-review dates and Performance charts update.', 'Below the plan, <b>Weakest topics</b> lists topics where you have answered at least 3 questions. Tap <b>Practise</b> next to one to drill only that topic. <b>Retry missed questions</b> repeats everything you keep getting wrong.', 'If a box shows 0, that source is empty for now (for example no cards are due). The app fills the session from the next source instead.']) +
+      d('', '16 · Smart Revision (today\'s session)', ['Open <b>Smart Revision</b> (Dashboard button or the sidebar). Pick <b>10, 20 or 30 min</b>: the app builds that many questions, about one per minute.', 'The mix is, in order: spaced-review cards that are due, questions you got wrong more often than right, questions from your three weakest topics, then new questions. The four boxes show how many came from each.', 'Tap <b>Start</b>. Answers show straight after each question. The session counts as a normal exam, so your scores, spaced-review dates and Performance charts update.', 'Below the plan, <b>Weakest topics</b> lists topics where you have answered at least 3 questions. Tap <b>Practise</b> next to one to drill only that topic. <b>Open Spaced Review</b> shows your due cards.', 'If a box shows 0, that source is empty for now (for example no cards are due). The app fills the session from the next source instead.']) +
       d('', '17 · AI Question Lab (needs internet and a Gemini key)', ['Open <b>AI Question Lab</b>, type a topic (for example <i>brachial plexus</i>), and choose the course, the bank to save into, how many questions (5 to 20), the style, the difficulty and 4 or 5 options.', 'Styles: <b>Direct recall</b>, <b>Clinical vignette</b>, <b>Mechanism and application</b> and <b>Anatomical relations</b>. Tap <b>Generate</b>. Questions are written in batches of 10, so 20 questions take two calls.', 'The questions appear for review. The correct option is marked ✓ and the explanation is under each one. <b>Untick</b> any you do not want. Nothing is saved until you tap <b>Save ticked</b> or <b>Save and practise</b>.', 'The count shown is the real number received. Questions that repeat something already in your banks, or that had a broken answer key, are dropped, so you may get fewer than you asked for. Tap <b>Generate</b> again for more.', 'AI can be wrong. Check answers that matter against your notes before an exam. Without a key, add one in <b>Settings &amp; AI</b> (section 9).']) +
       d('', '18 · Performance', ['<b>Answers recorded</b> and <b>Accuracy</b> cover every question you have answered. <b>Day streak</b> counts days in a row with an exam or a spaced-review card. <b>Best exam</b> also shows your average seconds per question.', 'The bar chart shows questions answered over the last 14 days (today is pink). The line chart shows your last 15 exam scores against the 70% mark.', '<b>Accuracy by course</b> ranks your courses. The strongest and weakest are named once each has at least 5 answers.', 'Charts fill in as you practise. A new device or a cleared browser starts empty unless you restore a backup (section 10).']) +
       d('', '19 · AI Tutor, Smart Arranger and AI flashcards (need internet and a Gemini key)', ['<b>AI Tutor</b> is a chat for explaining mechanisms, building clinical cases, quizzing you or comparing topics. Press <b>Enter</b> to send and <b>Shift+Enter</b> for a new line. <b>New conversation</b> clears it.', '<b>Smart Arranger</b> is on the <b>Courses &amp; Topics</b> screen (✦ button). It sorts questions into your courses and topics. <b>Fast</b> uses keyword matching on your device only. <b>Fast + AI</b> sends the unclear ones to Gemini. Questions it cannot place with confidence are left alone for you to sort by hand.', '<b>AI Flashcards</b> is on the <b>Bookmarks &amp; Flashcards</b> screen (✦ button). Choose the source and how many cards, then flip through them.']) +
@@ -6329,7 +6329,7 @@ Return ONLY a JSON array, no markdown fences: [{"q":"...","o":["..."],"a":0,"e":
 (function () {
   'use strict';
   const web = /^https?:$/.test(location.protocol);
-  if (web && 'serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
+  if (web && 'serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').then(r => { try { window.__medSwWatch && window.__medSwWatch(r); } catch (e) {} }).catch(() => {}); });
   const st = document.createElement('style');
   st.textContent = '#pwaBar{position:fixed;left:16px;bottom:16px;z-index:9000;max-width:340px;padding:14px 16px;display:none}#pwaBar b{display:block;margin-bottom:4px}#pwaBar .flex-row{margin-top:10px;gap:8px}@media (max-width:840px){#pwaBar{left:12px;right:12px;bottom:88px;max-width:none}}';
   document.head.appendChild(st);
@@ -7037,7 +7037,7 @@ Return ONLY a JSON array, no markdown: [{"q":"","pts":[""],"model":"","fu":[""],
       d('gdViva', '23 · Viva (oral exam practice)', [
         'A <b>viva card</b> is one question the examiner asks, the <b>key points</b> a good answer must cover, an optional model answer and follow-up questions. Open <b>Practice</b> and choose the <b>Viva Voce</b> tab.',
         '<b>Add cards</b> in four ways: write one yourself; <b>paste many</b> (start each with <b>Q:</b>, then <b>Points:</b>, <b>Answer:</b>, <b>Follow-up:</b>, with a blank line between cards); <b>let the AI write them</b> for a topic (needs internet and a Gemini key; you review and tick before saving); or <b>make cards from your written questions</b>, which reuses their model answers and marking points.',
-        '<b>Practise</b>: choose course, topic, how many, the order, the marking style and a timer. <b>Smart mix: weak + due + new</b> is the default order. Other orders are <b>Weak topics first</b>, <b>New questions first</b>, <b>Saved viva cards only</b> and <b>Generate fresh AI questions</b>. <b>Read each question aloud</b> uses your device voice. The <b>🎤 Dictate</b> button types what you say; most browsers need internet for it.',
+        '<b>Practise</b>: choose course, topic, exam duration, question target, difficulty, examiner style and question source (smart mix of weak, due and new, weak topics first, new first, saved viva cards only, or fresh AI questions), then tap <b>Start Viva Voce</b>. The <b>🎤 Dictate</b> button types what you say; most browsers need internet for it.',
         '<b>Mark myself</b>: answer out loud or type, tap <b>Show model answer</b>, tick the key points you actually covered, then choose <b>Again, Hard, Good or Easy</b>. The suggested rating is highlighted from your score. Again brings the card back in 10 minutes; the others space it out over days.',
         '<b>AI examiner</b>: type or dictate your answer and tap <b>Submit to examiner</b>. You get a score out of 10, the points you covered and missed, short feedback and a follow-up question (up to 2 follow-ups). It marks only what you said, but it can be wrong, so check against your notes. If it fails, tap <b>Mark myself instead</b>.',
         '<b>Cards</b> tab: search, edit, delete, <b>Export</b> and <b>Import</b>. Viva cards are included in <b>Download Full Backup</b> and restored with it.',
@@ -7078,7 +7078,17 @@ Return ONLY a JSON array, no markdown: [{"q":"","pts":[""],"model":"","fu":[""],
       d('', '29 · Learning Stage Profile', [
         'Open <b>Learning Stage Profile</b> (Insights group). Choose your current stage (for example 200 Level) and an optional focus such as <b>2nd MBBS consolidation</b>, then tap <b>Save profile</b>.',
         'It only labels your study and is shown on Courses &amp; Topics. It never hides questions or topics.',
-        'It is saved on this device only.']));
+        'It is saved on this device only.']) +
+      d('', '30 · If the app closes during an exam', [
+        'A running CBT exam is saved automatically on this device after every answer, flag or move, and again when you leave the app. Your questions, answers, flags, position and time left are kept.',
+        'When you open MedCBT again you are asked to <b>Resume exam</b> or <b>Discard</b>. If you dismiss the pop-up, the same choice stays at the top of the CBT Practice screen until you decide.',
+        '<b>The clock does not pause.</b> Time keeps running while the app is closed, exactly like a real exam. If the time ran out, you can <b>Submit &amp; see score</b> to grade the answers you had saved.',
+        'Closing or reloading during an exam shows a "Leave this page?" warning on computers. Most phones skip that warning, but the exam is still saved.',
+        'This protects CBT Practice exams. Viva, Essay, SAQ and Clinical Case sessions are not saved this way.']) +
+      d('', '31 · Updating the app', [
+        'MedCBT checks for a new version every time you open it, and about every 30 minutes while it stays open. When one is ready, a <b>New version ready</b> button appears at the bottom.',
+        'Tap <b>Update now</b> to switch to the new version. The app reloads only after the new version has really taken over. If it cannot, you get an error with Retry. Tap <b>Later</b> to keep working. It never appears during a CBT exam, Viva, Histology Spotter or Clinical Case session, and it is hidden until you leave it.',
+        'Opening the app online always loads the newest page. This button is for changes to the app\'s background worker. If something looks out of date, close the app fully and open it again.']));
   }
   function boot() { addKeyCard(); keyStat(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
@@ -7861,6 +7871,228 @@ var css=document.createElement('style');
 css.textContent='.cc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.cc-choice{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin:6px 0;cursor:pointer;background:var(--surface)}.cc-choice small{display:block;color:var(--text-muted);font-size:12.5px}.cc-box{border:1px solid var(--border);border-radius:10px;padding:10px;max-height:220px;overflow:auto;background:var(--surface-2)}.cc-lib-row{display:flex;gap:8px;padding:5px 0}.cc-saved{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-subtle);flex-wrap:wrap}.cc-saved:last-child{border-bottom:0}.cc-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.cc-pill{display:inline-block;font-size:11.5px;font-weight:800;letter-spacing:.04em;padding:5px 10px;border-radius:999px;background:var(--primary-soft);color:var(--primary-text)}.cc-priors{margin:10px 0}.cc-prior{border:1px solid var(--border-subtle);border-radius:10px;padding:8px 12px;margin:6px 0;background:var(--surface-2)}.cc-prior summary{cursor:pointer;font-weight:600;font-size:13.5px}.cc-prior div{margin-top:6px;font-size:14px;line-height:1.55}.cc-info{border-left:4px solid var(--accent);background:var(--surface-2);padding:12px 14px;border-radius:0 10px 10px 0;margin:12px 0;line-height:1.6}.cc-lab{font-size:11.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--text-faint);margin-bottom:4px}.cc-q{font-family:var(--font-display);font-size:19px;font-weight:600;line-height:1.4;margin:14px 0 10px}.cc-ans{width:100%;min-height:130px}.cc-model,.cc-ai,.cc-pts{margin-top:12px;padding:12px 14px;border:1px solid var(--border-subtle);border-radius:10px;background:var(--surface-2);line-height:1.55}.cc-ai{border-color:var(--primary);background:var(--primary-soft)}.cc-pt{display:flex;gap:8px;align-items:flex-start;padding:6px 0;cursor:pointer}.cc-pt input{margin-top:4px}.cc-res{margin-top:12px}.cc-res-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-subtle)}.cc-big{font-family:var(--font-display);font-size:44px;font-weight:700;margin:6px 0}'+
 '.ui-seg{display:flex;gap:6px;flex-wrap:wrap}.ui-seg button{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:9px;padding:8px 14px;font:inherit;font-weight:600;font-size:13.5px;cursor:pointer}.ui-seg button.on{background:var(--primary);border-color:var(--primary);color:#fff}.ui-sws{display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:8px}.ui-sw{display:flex;align-items:center;gap:8px;border:2px solid var(--border);background:var(--surface);color:var(--text);border-radius:10px;padding:7px 9px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;position:relative;text-align:left}.ui-sw i{width:22px;height:22px;border-radius:50%;flex:0 0 22px;border:1px solid rgba(0,0,0,.15)}.ui-sw.on{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}.ui-custom i{background:#4a48aa}.ui-custom input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}.ui-size{display:flex;align-items:center;gap:10px}.ui-size input[type=range]{flex:1;accent-color:var(--primary)}.ui-presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.ui-prev{margin-top:14px;padding:14px 16px;border:1px dashed var(--border);border-radius:12px;background:var(--surface-2)}.ui-prev-h{font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:6px}.ui-prev p{margin:0 0 10px;line-height:1.55}@media(max-width:700px){.cc-grid{grid-template-columns:1fr}.cc-q{font-size:17px}}';
 document.head.appendChild(css);
+})();
+</script>
+
+<script>
+/* ===== Exam protection: autosave + resume. The clock NEVER pauses while the app is closed. ===== */
+(function () {
+  'use strict';
+  var KEY = 'medcbt_exam_resume_v1';
+  function getS() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+  function setS(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+  function clearS() { try { localStorage.removeItem(KEY); } catch (e) {} }
+  function el(id) { return document.getElementById(id); }
+  function running() { try { var ex = AppState.exam; return !!(ex && !ex.finished && ex.items && ex.items.length); } catch (e) { return false; } }
+
+  function save() {
+    try {
+      if (!running()) return;
+      var ex = AppState.exam, have = {};
+      (AppState.questions || []).forEach(function (q) { have[q.id] = 1; });
+      var p = {
+        v: 1, savedAt: Date.now(), bankName: ex.bankName, mode: ex.mode, idx: ex.idx,
+        untimed: !!ex.untimed, startedAt: ex.startedAt, deadline: ex.deadline || 0,
+        items: ex.items.map(function (it) {
+          var r = { id: it.qObj.id, opts: it.opts, correctIdx: it.correctIdx, userIdx: it.userIdx, flagged: !!it.flagged };
+          if (!have[it.qObj.id]) r.q = it.qObj;      // question no longer in the bank: keep a copy
+          return r;
+        })
+      };
+      setS(JSON.stringify(p));
+    } catch (e) {}
+  }
+
+  function tick() {
+    var ex = AppState.exam;
+    if (!ex || ex.finished) return;
+    if (ex.deadline) ex.secondsLeft = Math.max(0, Math.ceil((ex.deadline - Date.now()) / 1000));
+    updateTimerDisplay();
+    if (ex.secondsLeft <= 0) { toast('Time expired! Submitting exam automatically.'); finishExam(true); }
+  }
+
+  function read() {
+    var raw = getS(); if (!raw) return null;
+    try { var p = JSON.parse(raw); if (p && p.v === 1 && p.items && p.items.length) return p; } catch (e) {}
+    clearS(); return null;
+  }
+
+  function restore(p, forceSubmit) {
+    var byId = {}; (AppState.questions || []).forEach(function (q) { byId[q.id] = q; });
+    var items = [];
+    p.items.forEach(function (r) {
+      var q = byId[r.id] || r.q; if (!q) return;
+      items.push({ qObj: q, opts: r.opts, correctIdx: r.correctIdx, userIdx: r.userIdx, flagged: !!r.flagged });
+    });
+    if (!items.length) { clearS(); return false; }
+    if (AppState.exam && AppState.exam.timerId) clearInterval(AppState.exam.timerId);
+    var now = Date.now();
+    var left = p.untimed ? 0 : Math.max(0, Math.ceil((p.deadline - now) / 1000));
+    var started = p.startedAt;
+    if (forceSubmit && !p.untimed) started = now - Math.max(0, p.deadline - p.startedAt);   // duration = time allowed, not time closed
+    AppState.exam = {
+      bankName: p.bankName, mode: p.mode, items: items,
+      idx: Math.min(Math.max(0, p.idx | 0), items.length - 1),
+      secondsLeft: left, untimed: !!p.untimed, startedAt: started, finished: false, timerId: null,
+      deadline: p.untimed ? 0 : p.deadline
+    };
+    closeModal();
+    go('exam');
+    el('examSetup').style.display = 'none'; el('examSummary').style.display = 'none'; el('examRunner').style.display = 'block';
+    var ex = AppState.exam;
+    if (forceSubmit) { updateTimerDisplay(); renderExamQuestion(); finishExam(true); return true; }
+    if (ex.untimed) { el('exTimerBadge').textContent = 'Untimed'; }
+    else { updateTimerDisplay(); ex.timerId = setInterval(tick, 1000); }
+    renderExamQuestion();
+    toast('Exam resumed. The clock kept running while the app was closed.');
+    return true;
+  }
+
+  function summary(p) {
+    var answered = p.items.filter(function (i) { return i.userIdx !== null; }).length, total = p.items.length;
+    var left = p.untimed ? null : Math.max(0, Math.ceil((p.deadline - Date.now()) / 1000));
+    var t = left === null ? 'Untimed' : (Math.floor(left / 60) + 'm ' + (left % 60) + 's left');
+    return { answered: answered, total: total, left: left, text: esc(p.bankName || 'CBT exam') + ' · question ' + ((p.idx | 0) + 1) + ' of ' + total + ' · ' + answered + ' answered · ' + t };
+  }
+
+  window.MedExamResume = {
+    resume: function () { var p = read(); if (p) restore(p, false); },
+    submit: function () { var p = read(); if (p) restore(p, true); },
+    discard: function () { clearS(); closeModal(); renderBanner(); toast('Saved exam discarded.'); }
+  };
+
+  function prompt() {
+    var p = read(); if (!p || running()) return;
+    var s = summary(p), expired = s.left !== null && s.left <= 0;
+    openModal(expired
+      ? '<h3 class="card-title">Your exam time ran out</h3><p class="text-muted">' + s.text + '</p><p>The clock does not pause while the app is closed. Your ' + s.answered + ' saved answer(s) can be submitted and scored now.</p>' +
+        '<div class="flex-row mt-3" style="justify-content:flex-end"><button class="btn" onclick="MedExamResume.discard()">Discard</button><button class="btn btn-primary" onclick="MedExamResume.submit()">Submit &amp; see score</button></div>'
+      : '<h3 class="card-title">Resume your exam?</h3><p class="text-muted">' + s.text + '</p><p>The clock kept running while the app was closed.</p>' +
+        '<div class="flex-row mt-3" style="justify-content:flex-end"><button class="btn" onclick="MedExamResume.discard()">Discard</button><button class="btn btn-primary" onclick="MedExamResume.resume()">Resume exam</button></div>');
+  }
+
+  function renderBanner() {
+    var setup = el('examSetup'); if (!setup) return;
+    var b = el('examResumeBanner'), p = read();
+    if (!p || running()) { if (b) b.remove(); return; }
+    if (!b) { b = document.createElement('div'); b.id = 'examResumeBanner'; b.className = 'card'; b.style.borderLeft = '5px solid var(--warning)'; setup.insertBefore(b, setup.firstChild); }
+    var s = summary(p), expired = s.left !== null && s.left <= 0;
+    b.innerHTML = '<strong>Unfinished exam</strong><p class="text-sm text-muted" style="margin:4px 0 8px">' + s.text + '</p><div class="flex-row">' +
+      (expired ? '<button class="btn btn-primary btn-sm" onclick="MedExamResume.submit()">Submit &amp; see score</button>' : '<button class="btn btn-primary btn-sm" onclick="MedExamResume.resume()">Resume exam</button>') +
+      '<button class="btn btn-sm" onclick="MedExamResume.discard()">Discard</button></div>';
+  }
+
+  /* ---- hook into the existing exam code ---- */
+  var _se = startExam;
+  startExam = function () {
+    var r = _se.apply(this, arguments);
+    try { if (running()) { var ex = AppState.exam; if (!ex.untimed && !ex.deadline) ex.deadline = ex.startedAt + ex.secondsLeft * 1000; save(); } } catch (e) {}
+    return r;
+  };
+  var _re = renderExamQuestion;
+  renderExamQuestion = function () { var r = _re.apply(this, arguments); save(); return r; };
+  var _fe = finishExam;
+  finishExam = async function () {
+    var ex = AppState.exam;
+    var r = await _fe.apply(this, arguments);
+    if (ex && ex.finished) clearS();
+    return r;
+  };
+  var _rs = resetExamToSetup;
+  resetExamToSetup = function () { var r = _rs.apply(this, arguments); clearS(); renderBanner(); return r; };
+  var _go = go;
+  go = function (v) { var r = _go.apply(this, arguments); if (v === 'exam') { try { renderBanner(); } catch (e) {} } return r; };
+
+  setInterval(save, 5000);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') save(); });
+  window.addEventListener('pagehide', save);
+  window.addEventListener('beforeunload', function (e) { if (running()) { save(); e.preventDefault(); e.returnValue = ''; } });
+
+  /* ---- offer to resume once the app has finished loading ---- */
+  var tries = 0, waiter = setInterval(function () {
+    tries++;
+    var ready = false;
+    try { ready = !!(AppState.db && AppState.questions && AppState.questions.length && el('modalBox')); } catch (e) {}
+    if (ready) { clearInterval(waiter); prompt(); renderBanner(); }
+    else if (tries > 120) clearInterval(waiter);
+  }, 250);
+})();
+</script>
+<script>
+/* ===== "New version ready" button: updates only when YOU tap it, never during a session, and reloads only after the new worker really takes over ===== */
+(function () {
+  'use strict';
+  if (!('serviceWorker' in navigator)) return;
+  var pending = null, dismissed = false, updating = false, reloading = false, listening = false, failTimer = 0;
+  function busy() {
+    try { var ex = AppState.exam; if (ex && !ex.finished) return true; } catch (e) {}
+    try { if (typeof activeView !== 'undefined' && (activeView === 'viva' || activeView === 'spot' || activeView === 'cases')) return true; } catch (e) {}
+    return false;
+  }
+  function say(m) { try { toast(m); } catch (e) {} }
+  function ui(on) {
+    var n = document.getElementById('swUpdNow'), l = document.getElementById('swUpdLater');
+    if (n) { n.disabled = on; n.textContent = on ? 'Updating…' : 'Update now'; }
+    if (l) l.disabled = on;
+  }
+  function bar() {
+    var b = document.getElementById('swUpdateBar');
+    if (!b) {
+      b = document.createElement('div'); b.id = 'swUpdateBar';
+      b.setAttribute('role', 'status');
+      b.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;max-width:520px;margin:0 auto;background:var(--card,#fff);color:var(--text,#111);border:1px solid var(--border,#ccc);border-left:5px solid var(--accent,#4a48aa);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.25);padding:12px 14px;display:none;gap:10px;align-items:center;flex-wrap:wrap';
+      b.innerHTML = '<div style="flex:1;min-width:160px"><strong>New version ready</strong><div style="font-size:13px;opacity:.75">Update when you are not in the middle of something.</div></div>' +
+        '<button class="btn btn-primary btn-sm" id="swUpdNow" type="button">Update now</button><button class="btn btn-sm" id="swUpdLater" type="button">Later</button>';
+      document.body.appendChild(b);
+      b.querySelector('#swUpdNow').onclick = updateNow;
+      b.querySelector('#swUpdLater').onclick = function () { dismissed = true; refresh(); };
+    }
+    return b;
+  }
+  function refresh() {
+    var show = !!pending && !dismissed && !busy();
+    if (show || document.getElementById('swUpdateBar')) bar().style.display = show ? 'flex' : 'none';
+  }
+  function fail() {
+    clearTimeout(failTimer); updating = false; ui(false); refresh();
+    var m = 'The new version has not taken over yet. Close every MedCBT tab or window, then open the app again, or tap Retry.';
+    if (typeof showError === 'function') showError('Update did not finish', m, { retry: function () { updateNow(); } });
+    else say(m);
+  }
+  function onControl() {
+    if (!updating || reloading) return;           // only react to the update this button started
+    clearTimeout(failTimer);
+    if (busy()) { updating = false; pending = null; refresh(); say('Update is ready. It will apply the next time you open the app.'); return; }
+    reloading = true; location.reload();          // the new worker is in control, so this reload loads the new version
+  }
+  function updateNow() {
+    if (busy()) { say('Finish what you are doing first, then update.'); refresh(); return; }
+    if (!pending || updating) return;
+    updating = true; ui(true);
+    if (!listening) { listening = true; navigator.serviceWorker.addEventListener('controllerchange', onControl); }
+    try { pending.postMessage({ type: 'SKIP_WAITING' }); } catch (e) { fail(); return; }
+    failTimer = setTimeout(fail, 10000);          // no reload here: if the worker never takes over, tell the person instead
+  }
+  function offer(w) {
+    pending = w; dismissed = false; refresh();
+    w.addEventListener('statechange', function () {
+      if (w.state === 'redundant' && pending === w) { pending = null; if (updating) fail(); else refresh(); }
+    });
+  }
+  window.__medSwWatch = function (r) {
+    if (r.waiting && navigator.serviceWorker.controller) offer(r.waiting);
+    r.addEventListener('updatefound', function () {
+      var nw = r.installing; if (!nw) return;
+      nw.addEventListener('statechange', function () {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) offer(nw);
+      });
+    });
+    var check = function () { r.update().catch(function () {}); };
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') check(); });
+    window.addEventListener('online', check);
+    setInterval(check, 30 * 60 * 1000);
+  };
+  setInterval(refresh, 2000);    // hides the button during a session, shows it again afterwards
 })();
 </script>
 
